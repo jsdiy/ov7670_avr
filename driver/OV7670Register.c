@@ -12,7 +12,9 @@
 //基本設定（解像度/カラーモードによらないレジスタ値）
 const	regval_list	OV7670_default_regs[]	PROGMEM =
 {
-	{ REG_TSLB, 0x04 },	// Line Buffer Test Option	※Bit[2:1](0bxxxxx10x) Reserved
+	//	デフォルト値は0x0D=0b00001101.	Bit[2:1](0bxxxxx10x)はReserved.
+	//	Bit[3](UYVY or VYUY)とBit[0](Auto output window)を0とするので、0b00000100=0x04となる
+	{ REG_TSLB, 0x04 },	// Line Buffer Test Option
 
 	//linux版はVGA固定なので0x00だが、解像度変更に対応する場合はDCWENを設定する必要あり
 	{ REG_COM3, COM3_DCWEN },
@@ -53,25 +55,49 @@ const	regval_list	OV7670_default_regs[]	PROGMEM =
 	//{ REG_COM8, COM8_FASTAEC | COM8_AECSTEP | COM8_BFILT | COM8_AGC | COM8_AEC },
 
 	// Almost all of these are magic "reserved" values.
+	//	※OV7670では「reserved」は予約済というより「非公開」といった意味で使われている
 	{ REG_COM5, 0x61 },	// Reserved
 	{ REG_COM6, 0x4b },	// Reset all timing when format changes
+	/*	デフォルト値はXXとなっている。無くても画質に影響は見られなかったので削除する。
 	{ 0x16, 0x02 },		// Reserved
+	*/
 	{ REG_MVFP, 0x07 },	// 水平垂直反転	※linux版では反転なし
+	/*	デフォルト値がXXだったり、bit[7:0]Reservedだったり。無くても画質に影響は見られなかったので削除する。
 	{ REG_ADCCTR1, 0x02 },// Reserved
 	{ REG_ADCCTR2, 0x91 },// Reserved
 	{ 0x29, 0x07 }, { 0x33, 0x0b }, { 0x35, 0x0b }, { 0x37, 0x1d }, { 0x38, 0x71 }, { 0x39, 0x2a },	// All Reserved
+	*/
 	{ REG_COM12, 0x78 },
+	/*	デフォルト値はXXとなっている。無くても画質に影響は見られなかったので削除する。
 	{ 0x4d, 0x40 }, { 0x4e, 0x20 },	// Reserved
+	*/
+	/*	REG_GFIXのデフォルト値は0x00となっている。よって、設定する必要がないので削除する。
 	{ REG_GFIX, 0x00 },	// AWB Pre gain control
+	*/
 	{ REG_DBLV, DBLV_BYPASS },	// PLL control,Regulator control
 	{ REG_REG74, 0x19 },	// Digital gain manual control
+	/*	デフォルト値はXXとなっている。無くても画質に影響は見られなかったので削除する。
 	{ 0x8d, 0x4f }, { 0x8e, 0x00 }, { 0x8f, 0x00 }, { 0x90, 0x00 }, { 0x91, 0x00 },	// Reserved
+	*/
+	/*	REG_DM_LNL(Dummy Row low 8bit)のデフォルト値は0x00.	REG_DM_LNH(Dummy Row high 8bit)は設定していない。
+		よって、REG_DM_LNLを0x00に設定する必要がないので削除する。
 	{ REG_DM_LNL, 0x00 },
-	{ 0x96, 0x00 }, { 0x9a, 0x80 }, { 0xb0, 0x84 },
+	*/
+	/*	デフォルト値はXXとなっている。無くても画質に影響は見られなかったので削除する。
+	{ 0x96, 0x00 }, { 0x9a, 0x80 },
+	*/
+	/*	0xb0,0xb2,0xb8はレジスタ名がなく(RSVD)、デフォルト値はXXとなっている。
+		0xb0は、この設定を削除すると色が崩れる（赤・青が緑に置き換わったような色になる）ので削除しない。
+		0xb2,0xb8は、無くても画質に影響は見られなかったので削除する。
+	{ 0xb0, 0x84 },
 	{ REG_ABLC1, 0x0c },
 	{ 0xb2, 0x0e },
 	{ REG_THL_ST, 0x82 },
 	{ 0xb8, 0x0a },
+	*/
+	{ 0xb0, 0x84 },
+	{ REG_ABLC1, 0x0c },	//REG_ABLC1=0xB1
+	{ REG_THL_ST, 0x82 },	//REG_THL_ST=0xB3
 
 	// More reserved magic, some of which tweaks white balance
 	/*	linux版は下記となっているが、色味はディスプレイ側の調整や個人の好みによるので、
@@ -124,21 +150,39 @@ const	regval_list	OV7670_default_regs[]	PROGMEM =
 	{ REG_DNSTH, 0x00 },	// De-noise Threshold
 	{ REG_REG77, 0x01 },	// Offset, de-noise range control
 	{ REG_COM13, 0xC3 },	// Gamma enable, UV saturation auto adjustment	※bit[0]はカラーモードYUVのUV-swap
-	{ 0x4b, 0x09 },
+	/*	REG_4Bは[7:1]がReservedで、[0]は UV average enable とされている。
+		レジスタのデフォルト値は0x00だが、Linux版は0x09を設定しており、何を設定しているのかは不明。
+		無くても画質に影響は見られなかったので削除する。
+	{ REG_4B, 0x09 },
+	*/
 	{ REG_SATCTR, 0x60 },	// UV saturatin control min
 	{ REG_COM16, COM16_YUV_ENHANC | COM16_DE_NOISE | COM16_AWBGAIN },
 	{ REG_CONTRAS, 0x40 },	// Contrast Control
 
-	{ 0x34, 0x11 },
+	/*	REG_ARBLMは全ビットがReservedでデフォルト値は0x11となっている。
+		よって、設定する必要がないので削除する。
+	{ REG_ARBLM, 0x11 },
+	*/
 	{ REG_COM11, COM11_EXP | COM11_HZAUTO },	// Exposure timing can be less than limit of banding filter when light is too strong	※50/60Hz自動検出
 	{ REG_NT_CTRL, 0x80 | NT_CTRL_ROWPF | NT_CTRL_DMR_2x },	// Auto frame rate adjustment dummy row selection	※0x80はreservedされた値
+	/*	Reservedレジスタ群。
+		無くても画質に影響は見られなかったので削除する。
 	{ 0x96, 0x00 }, { 0x97, 0x30 },
 	{ 0x98, 0x20 }, { 0x99, 0x30 },
 	{ 0x9a, 0x84 }, { 0x9b, 0x29 },
-	{ 0x9c, 0x03 }, { 0x9d, 0x4c },
-	{ 0x9e, 0x3f },
+	{ 0x9c, 0x03 },
+	*/
+	/*	REG_COM11でCOM11_HZAUTOビットを立てているので、ここでデフォルト値(各0x99/0x7F)と異なる値を設定しても意味はない。
+		無くても画質に影響は見られなかったので削除する。
+	{ REG_BD50ST, 0x4c },
+	{ REG_BD60ST, 0x3f },
+	*/
+	/*	0x78はレジスタ名がなく(RSVD)、デフォルト値はXXとなっている。無くても画質に影響は見られなかったので削除する。
 	{ 0x78, 0x04 },
+	*/
 
+	/*	linux版は「超奇妙なもの」として内容が分からず下記を設定しているが、
+		無くても画質に影響は見られなかったので削除する。
 	// Extra-weird stuff.  Some sort of multiplexor register
 	{ 0x79, 0x01 }, { 0xc8, 0xf0 },
 	{ 0x79, 0x0f }, { 0xc8, 0x00 },
@@ -152,7 +196,8 @@ const	regval_list	OV7670_default_regs[]	PROGMEM =
 	{ 0x79, 0x03 }, { 0xc8, 0x40 },
 	{ 0x79, 0x05 }, { 0xc8, 0x30 },
 	{ 0x79, 0x26 },
-
+	*/
+	
 	{ 0xff, 0xff }	// END MARKER
 };
 
