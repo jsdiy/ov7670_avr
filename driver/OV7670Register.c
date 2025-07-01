@@ -16,7 +16,7 @@ const	regval_list	OV7670_default_regs[]	PROGMEM =
 	//	Bit[3](UYVY or VYUY)とBit[0](Auto output window)を0とするので、0b00000100=0x04となる
 	{ REG_TSLB, 0x04 },	// Line Buffer Test Option
 
-	//linux版はVGA固定なので0x00だが、解像度変更に対応する場合はDCWENを設定する必要あり
+	//linux版はVGA固定なので0x00を設定しているが、解像度変更に対応する場合はDCWENを設定する必要あり
 	{ REG_COM3, COM3_DCWEN },
 
 	{ REG_CLKRC, CLK_RSVD | 0x00 },	//0x00:分周なし	※あとから変更する
@@ -87,7 +87,7 @@ const	regval_list	OV7670_default_regs[]	PROGMEM =
 	{ 0x96, 0x00 }, { 0x9a, 0x80 },
 	*/
 	/*	0xb0,0xb2,0xb8はレジスタ名がなく(RSVD)、デフォルト値はXXとなっている。
-		0xb0は、この設定を削除すると色が崩れる（赤・青が緑に置き換わったような色になる）ので削除しない。
+		0xb0は、この設定を削除すると色が崩れる（赤・青が無くなったような色になる）ので削除しない。
 		0xb2,0xb8は、無くても画質に影響は見られなかったので削除する。
 	{ 0xb0, 0x84 },
 	{ REG_ABLC1, 0x0c },
