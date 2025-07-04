@@ -52,7 +52,6 @@ ATmega328P: 外付け16MHz
 static	uint8_t	pixelDataBuf[PIXELDATA_BUFSIZE_MAX];
 
 //関数
-//static	void	App_TakePicture(void);
 static	void	App_CbDrawImage(int16_t lineIndex, uint8_t* dataBuffer, int16_t dataLength);
 
 int	main(void)
@@ -76,7 +75,6 @@ int	main(void)
 	while (1)
 	{
 		//カメラの画像を描画する
-//		App_TakePicture();
 		OV7670_TakePicture(App_CbDrawImage, pixelDataBuf);
 	}
 
@@ -88,37 +86,3 @@ static	void	App_CbDrawImage(int16_t lineIndex, uint8_t* dataBuffer, int16_t data
 {
 	GLCD_DrawImage(0, lineIndex, OV7670_Width(), 1, dataBuffer, dataLength);
 }
-/*
-//カメラの画像を描画する
-static	void	App_TakePicture(void)
-{
-	int16_t	lineLoopCount = OV7670_Height();
-	int16_t lineIdx = 0;
-	const	int16_t pixelDataLength = OV7670_Width() * OV7670_BytePerPixel();
-
-	//フレームの開始を待つ
-	while (OV7670_CTRL_PIN & OV7670_CTRL_VSYNC);	//Hiの間（現在のフレーム継続中）
-	//while (!(OV7670_CTRL_PIN & PCINT_VSYNC));		//Loの間（現在のフレームが終了）	※これを検出する必要はない
-	//ここからフレーム開始
-
-	//行ごとの処理
-	while (lineLoopCount--)
-	{
-		//1行分の画素データを取得する
-		int16_t bufIdx = 0;
-		int16_t pixelDataLoopCount = pixelDataLength;
-		while (pixelDataLoopCount--)
-		{
-			//画素データの切り替わり（立ち下がり）を待ち、画素データを取得し、
-			//次の画素データのタイミング（立ち上がり）までやり過ごす
-			while (OV7670_CTRL_PIN & OV7670_CTRL_PCLK);	//Hiの間
-			pixelDataBuf[bufIdx++] = OV7670_DATA_PIN;
-			while (!(OV7670_CTRL_PIN & OV7670_CTRL_PCLK));	//Loの間
-		}
-
-		//描画
-		GLCD_DrawImage(0, lineIdx, OV7670_Width(), 1, pixelDataBuf, pixelDataLength);
-		lineIdx++;
-	}
-}
-*/
