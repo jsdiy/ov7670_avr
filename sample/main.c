@@ -52,7 +52,8 @@ ATmega328P: 外付け16MHz
 static	uint8_t	pixelDataBuf[PIXELDATA_BUFSIZE_MAX];
 
 //関数
-static	void	App_TakePicture(void);
+//static	void	App_TakePicture(void);
+static	void	App_CbDrawImage(int16_t lineIndex, uint8_t* dataBuffer, int16_t dataLength);
 
 int	main(void)
 {
@@ -70,17 +71,24 @@ int	main(void)
 
 	//カメラ初期化
 	OV7670_Initialize();
-	OV7670_SetCameraMode(CamRes_QQVGA);
+	OV7670_SetCameraMode(CamRes_QQVGA);	//CamRes_QVGAも可
 
 	while (1)
 	{
-		//カメラ画像を描画する
-		App_TakePicture();
+		//カメラの画像を描画する
+//		App_TakePicture();
+		OV7670_TakePicture(App_CbDrawImage, pixelDataBuf);
 	}
 
 	return 0;
 }
 
+//カメラの画像を描画する：コールバック関数
+static	void	App_CbDrawImage(int16_t lineIndex, uint8_t* dataBuffer, int16_t dataLength)
+{
+	GLCD_DrawImage(0, lineIndex, OV7670_Width(), 1, dataBuffer, dataLength);
+}
+/*
 //カメラの画像を描画する
 static	void	App_TakePicture(void)
 {
@@ -113,3 +121,4 @@ static	void	App_TakePicture(void)
 		lineIdx++;
 	}
 }
+*/
