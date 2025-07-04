@@ -45,6 +45,9 @@ typedef	enum
 }
 ECamColorMode;
 
+//コールバック関数の型
+typedef	void	(*TFpCallback)(int16_t lineIndex, uint8_t* dataBuffer, int16_t dataLength);
+
 //関数
 void	OV7670_Initialize(void);
 void	OV7670_SetCameraMode(ECamResolution res);
@@ -52,9 +55,9 @@ int16_t	OV7670_Width(void);
 int16_t	OV7670_Height(void);
 int8_t	OV7670_BytePerPixel(void);
 uint16_t	OV7670_CamComTest(void);
+void	OV7670_TakePicture(TFpCallback func, uint8_t* pixelDataBuf);
 void	OV7670_ColorBar(uint8_t isOn);
 void	OV7670_ColorBarTr(uint8_t isOn);	//半透明なカラーバー
-//
 void	OV7670_GetAwbGain(uint8_t* gainR, uint8_t* gainG, uint8_t* gainB);
 void	OV7670_SetAwbGain(uint8_t gainR, uint8_t gainG, uint8_t gainB);
 uint8_t	OV7670_GetBrightness(void);

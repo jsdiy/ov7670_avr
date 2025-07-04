@@ -16,6 +16,9 @@ static	int16_t	width, height;
 static	int8_t bytePerPixel;
 
 //関数
+int16_t	OV7670_Width(void) { return width; }
+int16_t	OV7670_Height(void) { return height; }
+int8_t	OV7670_BytePerPixel(void) { return bytePerPixel; }
 static	void	WriteRegister(uint8_t addr, uint8_t data);
 static	uint8_t	ReadRegister(uint8_t addr);
 static	void	RefreshCLKRC(void);
@@ -25,10 +28,6 @@ static	void	SetResolution(ECamResolution camRes);
 static	void	SetWindow(uint16_t hStart, uint16_t vStart);
 static	void	SetColorMode(ECamColorMode colMode);
 static	void	SetClockDiv(uint8_t xclkPreScale);
-//
-int16_t	OV7670_Width(void) { return width; }
-int16_t	OV7670_Height(void) { return height; }
-int8_t	OV7670_BytePerPixel(void) { return bytePerPixel; }
 
 //初期化
 void	OV7670_Initialize(void)
@@ -101,8 +100,11 @@ static	void	WriteRegister(uint8_t addr, uint8_t data)
 	→新しいスタート前のバスの空き時間：最小1.3us
 
 ・SCCBSpec_AN(v2.2) - 3.1.1 Start of Data Transmission によると、
-	TWI_START開始時、前回のTWI_STOPから1.25us以上経過している必要がある。
-	全てのTWI_START前に時間待ちすれば確実。5usで安定動作した。2usでは通信に失敗した（AVR内蔵8MHzの場合）。
+	Two timing parameters are defined for the start of transmission, tPRC and tPRA.（略）
+	The tPRA is defined as the pre-active time of SCCB_E.（略）
+	The minimum value of tPRA is 1.25 μs.（略）
+	→TWI_START開始時、前回のTWI_STOPから1.25us以上経過している必要がある。
+	　全てのTWI_START前に時間待ちすれば確実。5usで安定動作した。2usでは通信に失敗した（AVR内蔵8MHzの場合）。
 */
 static	uint8_t	ReadRegister(uint8_t addr)
 {
@@ -301,6 +303,39 @@ static	void	SetClockDiv(uint8_t xclkPreScale)
 	WriteRegister(REG_DBLV, (val & ~DBLV_CLK_MASK) | DBLV_BYPASS);
 	
 	RefreshCLKRC();
+}
+
+//カメラの画像を取得する
+void	OV7670_TakePicture(TFpCallback func, uint8_t* pixelDataBuf)
+{
+	int16_t	lineLoopCount = OV7670_Height();
+	int16_t lineIdx = 0;
+	int16_t dataLength = OV7670_Width() * OV7670_BytePerPixel();
+
+	//フレームの開始を待つ
+	while (OV7670_CTRL_PIN & OV7670_CTRL_VSYNC);	//Hiの間（現在のフレーム継続中）
+	//while (!(OV7670_CTRL_PIN & PCINT_VSYNC));		//Loの間（現在のフレームが終了）	※これを検出する必要はない
+	//ここからフレーム開始
+
+	//行ごとの処理
+	while (lineLoopCount--)
+	{
+		//1行分の画素データを取得する
+		int16_t bufIdx = 0;
+		int16_t pixelDataLoopCount = dataLength;
+		while (pixelDataLoopCount--)
+		{
+			//画素データの切り替わり（立ち下がり）を待ち、画素データを取得し、
+			//次の画素データのタイミング（立ち上がり）までやり過ごす
+			while (OV7670_CTRL_PIN & OV7670_CTRL_PCLK);	//Hiの間
+			pixelDataBuf[bufIdx++] = OV7670_DATA_PIN;
+			while (!(OV7670_CTRL_PIN & OV7670_CTRL_PCLK));	//Loの間
+		}
+
+		//1ライン分の画像データ処理
+		(*func)(lineIdx, pixelDataBuf, dataLength);
+		lineIdx++;
+	}
 }
 
 //カラーバーを表示する／しない
