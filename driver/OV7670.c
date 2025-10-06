@@ -180,10 +180,10 @@ static	void	SetResolution(ECamResolution camRes)
 #endif
 
 	case	CamRes_QVGA:
-		val |= COM7_FMT_QVGA;
+		val |= COM7_FMT_VGA;
 		WriteRegister(REG_COM7, val);
 		SetRegParams(OV7670_qvga);
-		SetWindow(/*180*/176, 12);	//カラーバーずれ軽減
+		SetWindow(176, 12);
 		width = 320;	height = 240;
 
 		//内部クロックをセットする:QVGA	
@@ -196,10 +196,10 @@ static	void	SetResolution(ECamResolution camRes)
 
 	default:
 	case	CamRes_QQVGA:
-		val |= COM7_FMT_QVGA;
+		val |= COM7_FMT_VGA;
 		WriteRegister(REG_COM7, val);
 		SetRegParams(OV7670_qqvga);
-		SetWindow(/*190*/184, 10);	//カラーバーずれ軽減
+		SetWindow(184, 10);
 		width = 160;	height = 120;
 
 		//内部クロックをセットする:QQVGA
@@ -389,3 +389,4 @@ void	OV7670_SetBrightness(uint8_t val) { WriteRegister(REG_BRIGHT, val); }
 //濃さ	デフォルト値は0x40
 uint8_t	OV7670_GetContrast(void) { return ReadRegister(REG_CONTRAS); }
 void	OV7670_SetContrast(uint8_t val) { WriteRegister(REG_CONTRAS, val); }
+
